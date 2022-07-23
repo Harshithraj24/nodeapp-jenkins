@@ -6,7 +6,7 @@ pipeline {
   environment {
     dockerimagename = "harshithraj24/nodeapp"
     dockerImage = ""
-    HELM_PATH = "/home/dell/clonednodeapp/deployment/charts"    
+    HELM_PATH = "/home/dell/nodeapp-jenkins/deployment/charts"    
     RELEASE_NAME = "demo"
     NAMESPACE = "demospace"
 
@@ -18,7 +18,7 @@ pipeline {
 
     stage('Checkout Source') {
       steps {
-        git 'https://github.com/Harshithraj24/clonednodeapp'      }
+        git 'https://github.com/Harshithraj24/nodeapp-jenkins'      }
     }
 
     stage('Build image') {
