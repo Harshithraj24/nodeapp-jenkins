@@ -1,67 +1,4 @@
-== 1: Using Global Tools Configuration
-
-[source,groovy]
-----
-#!groovy
-
-pipeline {
-    agent any
-
-    tools {
-        maven "3.6.0" // You need to add a maven with name "3.6.0" in the Global Tools Configuration page
-    }
-
-    stages {
-        stage("Build") {
-            steps {
-                sh "mvn -version"
-                sh "mvn clean install"
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
-        }
-    }
-}
-----
-
-== 2: Using `docker` agent and official Maven docker image
-
-[source,groovy]
-----
-#!groovy
-
-pipeline {
-  
-    agent {
-        docker {
-            image "maven:3.6.0-jdk-13"
-            label "docker"
-           
-        }
-    }
-
-    stages {
-        stage("Build") {
-            steps {
-                sh "mvn -version"
-                sh "mvn clean install"
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
-        }
-    }
-}
-----
-
-== 3: Using `dockerfile` agent and Maven docker image build from the official image
+== 1: The Jenkinsfile is shown below
 
 [source,groovy]
 ----
@@ -72,7 +9,12 @@ pipeline {
   }
 
   environment {
-    dockerimagename = "harshithraj24/javaapp"
+    dockerimagename = "harshithraj24/nodeapp"
+    dockerImage = ""
+    HELM_PATH = "/home/dell/nodeapp-jenkins/deployment/charts"    
+    RELEASE_NAME = "demo"
+    NAMESPACE = "demospace"
+
   }
 
   agent any
@@ -81,17 +23,8 @@ pipeline {
 
     stage('Checkout Source') {
       steps {
-         git branch: 'main', url: 'https://github.com/Harshithraj24/jenkins-pipeline-dockerfile'
-        }
+        git 'https://github.com/Harshithraj24/nodeapp-jenkins'      }
     }
-    
-    stage("Build") {
-            steps {
-                sh "mvn -version"
-                sh "mvn clean install"
-            }
-    }
-    
 
     stage('Build image') {
       steps{
@@ -113,17 +46,16 @@ pipeline {
         }
       }
     }
-    
+
     stage('Deploying App to Kubernetes') {
-      steps {
-        script {
-          kubernetesDeploy(configs: "java.yml", kubeconfigId: "kubernetes")
-        }
-      }
+       
+    steps{
+kubeconfig(caCertificate: '', credentialsId: 'kubejenkin', serverUrl: '') {
+          sh "helm upgrade -i -n ${NAMESPACE} ${RELEASE_NAME} ${HELM_PATH} -f ${HELM_PATH}/values.yaml    }
+    }
+    }
     }
   }
-}
-
 ----
 The Dockerfile for the nodejs app is mentioned below
 ----
