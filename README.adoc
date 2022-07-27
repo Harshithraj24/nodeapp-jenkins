@@ -1,0 +1,127 @@
+== 1: Using Global Tools Configuration
+
+[source,groovy]
+----
+#!groovy
+
+pipeline {
+    agent any
+
+    tools {
+        maven "3.6.0" // You need to add a maven with name "3.6.0" in the Global Tools Configuration page
+    }
+
+    stages {
+        stage("Build") {
+            steps {
+                sh "mvn -version"
+                sh "mvn clean install"
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
+----
+
+== 2: Using `docker` agent and official Maven docker image
+
+[source,groovy]
+----
+#!groovy
+
+pipeline {
+  
+    agent {
+        docker {
+            image "maven:3.6.0-jdk-13"
+            label "docker"
+           
+        }
+    }
+
+    stages {
+        stage("Build") {
+            steps {
+                sh "mvn -version"
+                sh "mvn clean install"
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
+----
+
+== 3: Using `dockerfile` agent and Maven docker image build from the official image
+
+[source,groovy]
+----
+#!groovy
+pipeline {
+    triggers {
+    githubPush()
+  }
+
+  environment {
+    dockerimagename = "harshithraj24/javaapp"
+  }
+
+  agent any
+
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+         git branch: 'main', url: 'https://github.com/Harshithraj24/jenkins-pipeline-dockerfile'
+        }
+    }
+    
+    stage("Build") {
+            steps {
+                sh "mvn -version"
+                sh "mvn clean install"
+            }
+    }
+    
+
+    stage('Build image') {
+      steps{
+        script {
+          dockerImage = docker.build dockerimagename
+        }
+      }
+    }
+
+    stage('Pushing Image') {
+      environment {
+               registryCredential = 'dockerhublogin'
+           }
+      steps{
+        script {
+          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
+            dockerImage.push("latest")
+          }
+        }
+      }
+    }
+    
+    stage('Deploying App to Kubernetes') {
+      steps {
+        script {
+          kubernetesDeploy(configs: "java.yml", kubeconfigId: "kubernetes")
+        }
+      }
+    }
+  }
+}
+
+----
