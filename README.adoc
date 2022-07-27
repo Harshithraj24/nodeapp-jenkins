@@ -1,4 +1,7 @@
-== 1: The Jenkinsfile is shown below
+== 1: The Jenkinsfile is shown below 
+The enviroment variable HELM_PATH has the path for helm chart which is in the github repo.
+Kubeconfig is used to authenticate to kubernetes.
+In values.yaml ,The image of the nodejs app is mentioned.
 
 [source,groovy]
 ----
@@ -58,6 +61,8 @@ kubeconfig(caCertificate: '', credentialsId: 'kubejenkin', serverUrl: '') {
   }
 ----
 The Dockerfile for the nodejs app is mentioned below
+CMD is used to run the application.
+COPY is used to copy the required files.
 ----
 FROM node:latest
 
